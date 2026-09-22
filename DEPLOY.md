@@ -7,17 +7,23 @@ For local setup and the file-by-file tour, see [README.md](README.md).
 
 ## 1. Neon: create the database
 
-1. Create a project at [neon.tech](https://neon.tech) (free tier is plenty).
-2. Choose the region closest to where your Vercel functions run — a feed page does one round trip per view, so distance is the main cost.
-3. Press **Connect** and copy the **Pooled connection** string:
+The Neon console changes from time to time; these are the steps as of now:
+
+1. Sign in at [neon.tech](https://neon.tech) and create a project (free tier is plenty). Pick the region closest to where your Vercel functions run — a feed page does one round trip per view, so distance is the main cost.
+2. On the **Project Dashboard**, click **Connect**. The *Connect to your database* panel opens with a ready-made connection string for the branch, compute, database and role you pick.
+3. Check that **Connection pooling** is switched **on**. That adds `-pooler` to the hostname:
+   `ep-xxx-pooler.eu-central-1.aws.neon.tech` — which is what you want from serverless functions.
+4. Copy the string. It looks like:
 
    ```
-   postgresql://USER:PASSWORD@ep-xxx-pooler.eu-central-1.aws.neon.tech/neondb?sslmode=require
+   postgresql://USER:PASSWORD@ep-xxx-pooler.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
    ```
 
-   The `-pooler` host goes through PgBouncer, which is what you want from serverless functions. The direct (non-pooled) host also works; it just opens more connections.
+   Both parameters are fine to keep: `sslmode=require` means the certificate is verified, and `pg` ignores `channel_binding`. See [TLS details](#5-tls-details-measured-not-guessed) below.
 
-4. Create the table. Either paste `db/schema.sql` into the Neon **SQL Editor**, or from your machine:
+   > If your password contains `@`, `:`, `/` or `#`, URL-encode it (`@` → `%40`) or the string will not parse. Neon's *Reset password* option, in the role selector of the same panel, is how you recover if you have lost it.
+
+5. Create the table. Either paste `db/schema.sql` into the Neon **SQL Editor**, or from your machine:
 
    ```bash
    cp .env.example .env.local     # paste the connection string into DATABASE_URL
@@ -33,14 +39,19 @@ For local setup and the file-by-file tour, see [README.md](README.md).
 
 1. Push the repository to GitHub/GitLab/Bitbucket.
 2. In Vercel: **Add New → Project → import the repository**. Framework preset, build command and output are detected automatically (`next build`); nothing to configure.
+
+   > Vercel's own *Storage → Neon* integration also works and writes `DATABASE_URL` for you. The manual route below is worth knowing because it is the same for every provider, and because it makes the environment scopes explicit.
+
 3. Under **Settings → Environment Variables**, add:
 
    | Name | Value | Environments |
    | --- | --- | --- |
    | `DATABASE_URL` | the Neon pooled connection string | Production, Preview, Development |
 
+   Tick all three environments. A variable scoped to Production only means every preview deployment quietly runs in demo mode.
+
    Optional extras, all documented in `.env.example`: `DATABASE_SSL`, `PG_POOL_MAX`, `ALLOW_DELETES`, `ALLOWED_DEV_ORIGINS`, `SHOW_DB_STATUS`.
-4. **Deploy.** If you added the variable after the first build, either redeploy or hit *Redeploy* in the deployment's menu so the new environment is picked up.
+4. **Deploy.** Environment variables are read at build/run time, so if you added the variable after the first build, hit *Redeploy* — a rebuild is what picks it up.
 
 ### Verify the deployment
 
@@ -93,7 +104,21 @@ Neon's HTTP driver does not support TLS options the way `pg` does, so `DATABASE_
 
 ---
 
-## 5. Other databases
+## 5. TLS details (measured, not guessed)
+
+Worth knowing before you debug a connection problem, because the connection string wins over anything the app sets:
+
+- **`sslmode` in the URL overrides the app's TLS options.** `pg` merges the parsed connection string over your config object, so `?sslmode=require` takes effect even though `lib/db.js` passes its own `ssl` value. Verified by pointing a `sslmode=require` URL at a server without TLS: the client refuses rather than falling back to plaintext.
+- **`sslmode=require` means "verify the certificate"** in `pg` 8 — it is an alias for `verify-full`, not libpq's weaker semantics. Neon's certificate is issued by a public CA, so this works with no extra configuration.
+- **`channel_binding=require`** (Neon adds it to fresh connection strings) is parsed and then ignored by `pg`; it is harmless to leave in place.
+- **`pg` prints a security notice** whenever `sslmode=require` is used, because the meaning changes in `pg` v9. It is a warning, not an error. Swapping to `sslmode=verify-full` gives identical behaviour today and silences it.
+- **No `sslmode` at all?** Marginalia enables TLS for every non-localhost host and leaves it off for localhost, which is what makes `npm run db:init` work against a local Postgres.
+
+`npm run verify` prints what it found: `provider`, `tls`, and how many pieces are stored.
+
+---
+
+## 6. Other databases
 
 | Provider | What to change |
 | --- | --- |
@@ -104,7 +129,7 @@ Neon's HTTP driver does not support TLS options the way `pg` does, so `DATABASE_
 
 ---
 
-## 6. Post-deploy checklist
+## 7. Post-deploy checklist
 
 - [ ] `https://your-app.vercel.app/api/health` returns `"connected": true`
 - [ ] The feed shows exactly the pieces you expect (`npm run verify -- --url …`)

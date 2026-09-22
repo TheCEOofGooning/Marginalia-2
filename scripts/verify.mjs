@@ -56,6 +56,24 @@ if (!isDatabaseConfigured()) {
       `  provider: ${looksNeon ? 'Neon' : 'other Postgres'}${looksNeon && !pooled ? ' — tip: use the pooled endpoint on Vercel' : ''}`,
     ),
   );
+
+  // TLS is decided by the connection string before this code gets a say, so
+  // report what will actually happen rather than what was intended.
+  // (Verified against pg 8: sslmode=require means "verify the certificate",
+  // identical to verify-full; channel_binding is parsed but ignored.)
+  const sslmode = new URL(connectionString).searchParams.get('sslmode');
+  const tlsNote = !sslmode
+    ? 'not set in the URL — Marginalia enables TLS for non-localhost hosts'
+    : sslmode === 'disable'
+      ? 'disabled'
+      : `${sslmode} → certificate verified`;
+  console.log(style.dim(`  tls: ${tlsNote}`));
+
+  if (sslmode === 'require') {
+    console.log(
+      style.dim('  tip: sslmode=verify-full behaves identically in pg 8 and silences its SSL-mode notice'),
+    );
+  }
 }
 
 // 2 ─ connection -------------------------------------------------------------

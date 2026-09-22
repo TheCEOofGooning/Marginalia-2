@@ -265,12 +265,14 @@ A few decisions worth knowing before you change things:
 
 | Symptom | Cause and fix |
 | --- | --- |
-| Amber "Demo mode" banner on the feed | `DATABASE_URL` is missing or unreachable. Hover the server logs for `[marginalia] postgres query failed: …`. |
-| `password authentication failed` | Wrong password, or a special character in it that needs URL-encoding. |
+| Amber "Demo mode" banner on the feed | `DATABASE_URL` is missing or unreachable. Check the server logs for `[marginalia] postgres query failed: …`. |
+| `password authentication failed` | Wrong password, or a special character in it that needs URL-encoding (`@` → `%40`). |
 | `relation "posts" does not exist` | Run `npm run db:init` (the app also self-heals on first publish). |
 | `self-signed certificate` / TLS errors | Set `DATABASE_SSL=disable` for a local database, or `require` for a hosted one. |
+| `SECURITY WARNING: The SSL modes 'prefer', 'require', …` in the logs | Not an error. `pg` 8 treats `sslmode=require` as `verify-full` and warns that `pg` 9 will change that. Swap to `sslmode=verify-full` for identical behaviour and quiet logs. |
 | Build fails resolving `pg` | Keep `pg` in `dependencies` and `serverExternalPackages: ['pg']` in `next.config.mjs`. |
 | Publishes vanish after a while | You are in demo mode (no database). See the first row. |
+| Works locally, "Demo mode" on Vercel | `DATABASE_URL` is scoped to the wrong environment, or you have not redeployed since adding it. |
 | `npm run db:*` fails with `MODULE_NOT_FOUND` | Those scripts need the `--conditions=react-server` flag that is already in `package.json` — run them through `npm run`, not `node` directly. |
 
 ---
