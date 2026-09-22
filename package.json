@@ -1,0 +1,34 @@
+{
+  "dependencies": {
+    "next": "^16.3.5",
+    "pg": "^8.23.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "server-only": "^0.0.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^16.3.5",
+    "tailwindcss": "^4.3.3"
+  },
+  "name": "marginalia",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Marginalia — a minimalist, signup-free publishing platform. Next.js App Router + Neon Postgres.",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "db:init": "node --conditions=react-server scripts/db-init.mjs",
+    "db:seed": "node --conditions=react-server scripts/db-seed.mjs",
+    "db:reset": "node --conditions=react-server scripts/db-reset.mjs",
+    "verify": "node --conditions=react-server scripts/verify.mjs",
+    "check": "npm run lint && npm run build"
+  },
+  "engines": {
+    "node": ">=20.9.0"
+  }
+}
