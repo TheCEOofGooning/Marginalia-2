@@ -1,0 +1,151 @@
+@import 'tailwindcss';
+
+/* ---------------------------------------------------------------------------
+   Marginalia — design tokens
+   A warm paper palette, two typefaces, one accent colour. Everything else in
+   the app is composed from these with Tailwind utilities.
+--------------------------------------------------------------------------- */
+@theme {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: var(--font-newsreader), 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia,
+    serif;
+  --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace;
+
+  --color-paper: #f6f3ec;
+  --color-paper-raised: #fffdf8;
+
+  --color-ink-50: #f8f7f4;
+  --color-ink-100: #ece9e2;
+  --color-ink-200: #ded9cd;
+  --color-ink-300: #c4bdad;
+  --color-ink-400: #948b7a;
+  --color-ink-500: #6d6555;
+  --color-ink-600: #4e483b;
+  --color-ink-700: #3b352c;
+  --color-ink-800: #29251e;
+  --color-ink-900: #1a1713;
+
+  --color-rust-50: #fdf4f0;
+  --color-rust-100: #fae6de;
+  --color-rust-200: #f3cbba;
+  --color-rust-300: #e7a68c;
+  --color-rust-400: #d77f5e;
+  --color-rust-500: #bd5c3b;
+  --color-rust-600: #9d472a;
+  --color-rust-700: #7c3722;
+  --color-rust-800: #5c2a1c;
+  --color-rust-900: #401f15;
+
+  --radius-sm: 3px;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-paper);
+    background-image: linear-gradient(180deg, #f9f6f0 0%, var(--color-paper) 22rem);
+    color: var(--color-ink-800);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background-color: var(--color-rust-200);
+    color: var(--color-ink-900);
+  }
+
+  /* Visible, consistent focus ring for keyboard users everywhere. */
+  :focus-visible {
+    outline: 2px solid var(--color-rust-500);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  /* ------------------------------- buttons ------------------------------- */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-sm bg-ink-900 px-6 py-3 font-sans text-sm font-medium tracking-wide text-paper transition-colors duration-150 hover:bg-rust-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rust-500 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .btn-sm {
+    @apply px-4 py-2 text-[0.8rem];
+  }
+
+  .link-quiet {
+    @apply text-ink-400 underline decoration-ink-200 decoration-1 underline-offset-4 transition-colors hover:text-rust-600 hover:decoration-rust-300;
+  }
+
+  /* -------------------------------- forms -------------------------------- */
+  .label {
+    @apply font-sans text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-ink-500;
+  }
+
+  .input,
+  .textarea {
+    @apply block w-full rounded-sm border border-ink-200 bg-paper-raised px-4 py-3 font-sans text-[0.95rem] text-ink-800 placeholder:text-ink-300 focus:border-rust-400 focus:outline-none disabled:opacity-60;
+  }
+
+  .textarea {
+    @apply leading-relaxed;
+  }
+
+  /* ------------------------------- typography ---------------------------- */
+  .post-body {
+    @apply text-[1.0625rem] leading-[1.85];
+  }
+
+  .post-body > p + p {
+    margin-top: 1.15em;
+  }
+
+  .drop-cap::first-letter {
+    @apply float-left mr-2 mt-1 font-display text-[3.4rem] leading-[0.72] font-normal text-ink-900;
+  }
+
+  .byline {
+    @apply font-display text-[1.05rem] italic text-ink-800;
+  }
+
+  .ornament {
+    @apply text-center text-lg tracking-[0.5em] text-ink-300;
+  }
+
+  /* Feed card: the CSS-only "just published" highlight, driven by #post-<id>. */
+  .post-card {
+    @apply scroll-mt-28 rounded-sm transition-colors duration-500;
+  }
+
+  .post-card:target {
+    @apply -mx-4 bg-rust-50/70 px-4 py-4 sm:-mx-6 sm:px-6;
+  }
+}
+
+@layer utilities {
+  /* Long, unbroken user input (a URL, a wall of consonants) must not break the
+     layout on small screens. */
+  .break-anywhere {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+}
